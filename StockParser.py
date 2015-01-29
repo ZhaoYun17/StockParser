@@ -4,6 +4,7 @@ Created on Wed Nov 26 13:16:14 2014
 
 @author: Po
 """
+# stockList = A list of Dictionaries. Dictionary contains details of a single stock
 # total = total of the stock
 # get.def_temp = defensive stock total
 # get.totalTemp = Total profile sum
@@ -22,6 +23,8 @@ from Tkinter import *
 #value= tuple of (website to pull info from, unit of stock owned)
 
 stockList=[]
+
+
 
 class Stock(object):
     def __init__(self,title,website,unit):
@@ -190,6 +193,24 @@ def GUI():
     
     Label(ratioFrame, text="DEF Asset=", font=("Helvetica", 12), fg="black", relief=RIDGE, padx=5,pady=5).grid(row=currentRow,column=1)
     
+    
+    class safe: # the decorator
+      def __init__(self, function):
+        self.function = function
+    
+      def __call__(self, *args):
+        try:
+          return self.function(*args)
+        except Exception, e:
+          # make a popup here with your exception information.
+          # might want to use traceback module to parse the exception info
+          print "Error: %s" % (e)
+          print "insert something valid!"
+          defense.config(text="INVALID")
+          offense.config(text="OKU")
+          totalSum.config(text="CACAT")    
+    
+    @safe
     def get(self):
         def_temp = float(entry_cel.get())
         try: # calculate converted temperature and place it in label
@@ -215,8 +236,9 @@ def GUI():
             totalSum.config(text="{0:.2f}".format(totalTemp))
             
         except ValueError: #user entered non-numberic temperature
-           #entry_cel.config(text="invalid")
-           print "insert something valid!"
+        #   entry_cel.config(text="invalid")
+        #   print "insert something valid!"
+            pass
         
     
     entry_cel = Entry(ratioFrame, width=7)
