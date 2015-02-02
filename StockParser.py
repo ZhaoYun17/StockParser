@@ -17,15 +17,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from Tkinter import *
 
-#input a cvs file
-#returns a list containing Stock which is in a class of it's own
-#key=Name of the stock
-#value= tuple of (website to pull info from, unit of stock owned)
-
 
 stockList=[]
-
-
 
 class Stock(object):
     # input a tuple containing (Stock name, webpage to track stock value, total unit that you bought)
@@ -68,54 +61,17 @@ class Stock(object):
         return float(self.price)*float(self.unit)
 
         
-        
+# CSV -> [Stock, Stock, Stock] where Stock is a class object.        
 # Open csv, from it input (Stock name, webpage to track stock value, total unit that you bought) to set up the 'Stock' class.
 with open('Po Profile.csv','rb') as PoProfile:
     PoProfileText=csv.reader(PoProfile)
     next(PoProfileText) #skip the stupid header
     for row in PoProfileText:
         stockList.append(Stock(row[0],row[1],row[2])) #This line prepared the stockList
-        
-# I use this line to check the stockList        
-#print stockList
+ 
 
-
-
-#2ND PART, PARSING THE DICTIONARY WE CREATED IN PART 1
-'''
-My new method of using class method kinda make this 2 function obsolete
-
-def findTitle(htmlText):
-    #give a stock website, return the stock name
-    start_tag="<title>"
-    end_tag="</title>"
-    start_index=htmlText.find(start_tag)+len(start_tag)
-    end_index=htmlText.find(end_tag)
-    return htmlText[start_index:end_index].strip()
-
-
-def findPrice(htmlText):
-    #give a stock website, return the stock price
-    MagicWord='<label id="MainContent_lbQuoteLast" class="QouteLast">'
-    #MagicWord is the xml text leading toward the price quote
-    start_index=htmlText.find(MagicWord)+len(MagicWord)
-    return htmlText[start_index:start_index+5]
-
-  
-
-
-
-These line was use to test the parsing of the html
-
-my_address = "http://www.malaysiastock.biz/Corporate-Infomation.aspx?type=A&value=M&source=M&securityCode=1155"
-html_page = urlopen(my_address)
-
-html_text = html_page.read()
-
-
-print findTitle(html_text),findPrice(html_text)
-
-'''
+       
+######2ND PART, PARSING THE DICTIONARY WE CREATED IN PART 1##########
 
 total=0 #Total amount in the form of stock.
 labels=[] # List containing all the stock name
@@ -127,34 +83,12 @@ for stock in stockList:
     labels+=[stock.title] #prepare label for pie chart
     value+=[stock.totalValue] #prepare the value of pie chart
 
+#original matplotlib pie-chart function is this:
 #plt.pie(value, labels=labels,
 #            autopct='%1.1f%%', shadow=True)
 
 
-
-def ori_run():
-    # This funciton is what I use originally to run the whole file, before using function "GUI()".
-    # Just skip this part unless you are looking for some history lesson.
-    total=0
-    labels=[]
-    value=[]
-    for stock in stockList:
-        total+=stock.totalValue #prepare sum
-        labels+=[stock.title] #prepare label for pie chart
-        value+=[stock.totalValue] #prepare the value of pie chart
-    
-    plt.pie(value, labels=labels,
-            autopct='%1.1f%%', shadow=True)
-    # I still don't undertand how this line work, I just substitute my own value in.
-        
-    print stockList
-    print "The total in this profile :" + str(total)
-    
-    plt.show()
-
-    raw_input("The End [Press Enter to Exit]")
-    
-#ori_run()
+######3RD PART, MAKING A GUI WITH TKINTER! ##################
 
 def GUI():
     # This is it guys! This is the entire GUI code, make for Tkinter.
@@ -274,19 +208,12 @@ def GUI():
     Label(ratioFrame, text="Profile Value=", font=("Helvetica", 12), fg="black", padx=5,pady=5).grid(row=currentRow,column=2)
     totalSum=Label(ratioFrame, text="$$$", font=("Helvetica", 12), fg="black", padx=5,pady=5)
     totalSum.grid(row=currentRow,column=3)
-    
-    
-    
-    
-    
-    
-        
-    
-    
-    
+      
 
-    
-    
+
+
+
+
     
     window.mainloop()
 
