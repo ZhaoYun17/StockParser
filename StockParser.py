@@ -16,6 +16,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from Tkinter import *
+import tkMessageBox
 
 
 stockList=[]
@@ -165,9 +166,10 @@ def GUI():
           # might want to use traceback module to parse the exception info
           print "Error: %s" % (e)
           print "insert something valid!"
-          defense.config(text="Insert number please!")
-          offense.config(text="Insert number please!")
-          totalSum.config(text="Insert number please!")    
+          defense.config(text="INVALID",fg="red")
+          offense.config(text="INVALID",fg="red")
+          totalSum.config(text="INVALID",fg="red")
+          tkMessageBox.showerror("Seriously Bro?", "Please insert valid NUMBER!")
     
     @safe
     def get(self):
@@ -179,9 +181,9 @@ def GUI():
         off_percent = total/(def_temp+total)*100
         totalTemp= total+def_temp
         
-        defense.config(text="{0:.2f}%".format(def_percent))
-        offense.config(text="{0:.2f}%".format(off_percent))
-        totalSum.config(text="{0:.2f}".format(totalTemp))
+        defense.config(text="{0:.2f}%".format(def_percent),fg="black")
+        offense.config(text="{0:.2f}%".format(off_percent),fg="black")
+        totalSum.config(text="{0:.2f}".format(totalTemp),fg="black")
         
     # Entry cell is a bad name, should prolly change it to something like Def_asset_input_cel:
     # Anyways it is an entry box for inputting defensive asset value
