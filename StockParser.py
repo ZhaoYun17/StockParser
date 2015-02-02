@@ -153,7 +153,6 @@ def GUI():
     
     # Need a wrapper to handle error message for tkinter, no idea why but the normal Try and except don't work on Tkinter.
     # Got this from stackoverflow, work like charm.
-    """ TASK: Make a pop up! I donno how to make a pop up!!"""
     class safe: # the decorator
       def __init__(self, function):
         self.function = function
@@ -166,6 +165,7 @@ def GUI():
           # might want to use traceback module to parse the exception info
           print "Error: %s" % (e)
           print "insert something valid!"
+          entry_cel.delete(0, END)
           defense.config(text="INVALID",fg="red")
           offense.config(text="INVALID",fg="red")
           totalSum.config(text="INVALID",fg="red")
