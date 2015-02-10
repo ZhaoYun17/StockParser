@@ -17,6 +17,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from Tkinter import *
 import tkMessageBox
+import re
 
 
 stockList=[]
@@ -51,12 +52,18 @@ class Stock(object):
     
     def getPrice(self):
         # This is the webcrawler used to get the value from website, it works for now.
-        htmlFile=urlopen(self.website)
-        htmlFileReader=htmlFile.read()
-        MagicWord='<label id="MainContent_lbQuoteLast" class="QouteLast">'
-        #MagicWord is the xml text leading toward the price quote
-        start_index=htmlFileReader.find(MagicWord)+len(MagicWord)
-        return htmlFileReader[start_index:start_index+5]
+        try: 
+            # I found that wall street journal site's stock webpage use the name of the stock!! Hence simple coding!
+            htmlFile=urlopen('view-source:http://quotes.wsj.com/MY/XKLS/'+self.title+'?mod=DNH_S_cq')
+            htmlFileReader=htmlFile.read()
+            return re.search(r'id="quote_val">(.*)</span>',htmlFileReader,re.M)
+        except:    
+            htmlFile=urlopen(self.website)
+            htmlFileReader=htmlFile.read()
+            MagicWord='<label id="MainContent_lbQuoteLast" class="QouteLast">'
+            #MagicWord is the xml text leading toward the price quote
+            start_index=htmlFileReader.find(MagicWord)+len(MagicWord)
+            return htmlFileReader[start_index:start_index+5]
         
     def getTotalValue(self):
         return float(self.price)*float(self.unit)
