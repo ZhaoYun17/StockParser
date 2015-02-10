@@ -11,6 +11,7 @@ Created on Wed Nov 26 13:16:14 2014
 
 
 import csv
+import sqlite3 
 from urllib2 import urlopen
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -18,6 +19,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from Tkinter import *
 import tkMessageBox
 import re
+import os.path
 
 
 stockList=[]
@@ -29,7 +31,7 @@ class Stock(object):
         self.title=title
         self.website=website
         self.unit=unit
-        self.price=self.getPrice()
+        self.price=self.setPrice()
         self.totalValue=self.getTotalValue()
     
     def __repr__(self):
@@ -42,28 +44,35 @@ class Stock(object):
         """.format(self.title,self.unit ,self.price, self.totalValue, self.website)
         
     def getTitle(self):
-        return self.title
+        return self.title.upper()
         
     def getWebsite(self):
         return self.website
     
     def getUnit(self):
         return self.unit
-    
+        
     def getPrice(self):
+        return self.price
+    
+    def setPrice(self):
         # This is the webcrawler used to get the value from website, it works for now.
-        try: 
-            # I found that wall street journal site's stock webpage use the name of the stock!! Hence simple coding!
-            htmlFile=urlopen('view-source:http://quotes.wsj.com/MY/XKLS/'+self.title+'?mod=DNH_S_cq')
-            htmlFileReader=htmlFile.read()
-            return re.search(r'id="quote_val">(.*)</span>',htmlFileReader,re.M)
-        except:    
-            htmlFile=urlopen(self.website)
-            htmlFileReader=htmlFile.read()
-            MagicWord='<label id="MainContent_lbQuoteLast" class="QouteLast">'
-            #MagicWord is the xml text leading toward the price quote
-            start_index=htmlFileReader.find(MagicWord)+len(MagicWord)
-            return htmlFileReader[start_index:start_index+5]
+        # I found that wall street journal site's stock webpage use the name of the stock!! Hence simple coding!
+        pat = re.compile(r'id="quote_val">(\d*\.\d*)</span>',re.M)
+        print 'assessing this website '+'http://quotes.wsj.com/MY/XKLS/'+self.title+'?mod=DNH_S_cq'
+        htmlFile=urlopen('http://quotes.wsj.com/MY/XKLS/'+self.title+'?mod=DNH_S_cq')
+        htmlFileReader=htmlFile.read()
+        return re.search(pat ,htmlFileReader).group(1)
+        #Below is pretty useless for now    
+        '''
+        htmlFile=urlopen(self.website)
+        htmlFileReader=htmlFile.read()
+        MagicWord='<label id="MainContent_lbQuoteLast" class="QouteLast">'
+        #MagicWord is the xml text leading toward the price quote
+        start_index=htmlFileReader.find(MagicWord)+len(MagicWord)
+        return htmlFileReader[start_index:start_index+5]
+        '''
+    
         
     def getTotalValue(self):
         return float(self.price)*float(self.unit)
@@ -71,14 +80,34 @@ class Stock(object):
         
 # CSV -> [Stock, Stock, Stock] where Stock is a class object.        
 # Open csv, from it input (Stock name, webpage to track stock value, total unit that you bought) to set up the 'Stock' class.
-with open('Po Profile.csv','rb') as PoProfile:
-    PoProfileText=csv.reader(PoProfile)
-    next(PoProfileText) #skip the stupid header
-    for row in PoProfileText:
-        stockList.append(Stock(row[0],row[1],row[2])) #This line prepared the stockList
- 
+'''
+def CSV_Dic_Making(): #old function that I wouldn't dare to delete just yet
+    with open('Po Profile.csv','rb') as PoProfile:
+        PoProfileText=csv.reader(PoProfile)
+        next(PoProfileText) #skip the stupid header
+        for row in PoProfileText:
+            stockList.append(Stock(row[0],row[1],row[2])) #This line prepared the stockList
+'''
+# database -> [Stock, Stock, Stock] where Stock is a class object.        
+# Open the db, from it input (Stock name, webpage to track stock value, total unit that you bought) to set up the 'Stock' class.
+def Dic_making():
+    user=str(raw_input("who's profile are we analysing today?"))
+    if os.path.isfile(user+'.db'):
+        Database=user+'.db'
+    else:
+        print('User not found, redirect to dummy data')
+        Database='Dummy.db'
+    
+    with sqlite3.connect(Database) as connection:
+        c = connection.cursor()
+        c.execute("""SELECT name, unit FROM stock""")
+        rows = c.fetchall()
+        for row in rows:
+            stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
+            
+Dic_making()
 
-       
+           
 ######2ND PART, PARSING THE DICTIONARY WE CREATED IN PART 1##########
 
 total=0 #Total amount in the form of stock.
