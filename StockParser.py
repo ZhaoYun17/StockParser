@@ -20,7 +20,7 @@ from Tkinter import *
 import tkMessageBox
 import re
 import os.path
-
+from multiprocessing.pool import ThreadPool
 
 stockList=[]
 
@@ -102,11 +102,14 @@ def Dic_making():
         c = connection.cursor()
         c.execute("""SELECT name, unit FROM stock""")
         rows = c.fetchall()
+        pool = ThreadPool(processes=1)
         for row in rows:
-            stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
+            async_result = pool.apply_async(Stock, (row[0],'null',row[1]))
+            stockList.append(async_result.get())
+        print stockList
+            #stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
             
 Dic_making()
-
            
 ######2ND PART, PARSING THE DICTIONARY WE CREATED IN PART 1##########
 
