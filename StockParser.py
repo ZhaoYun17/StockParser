@@ -20,7 +20,8 @@ from Tkinter import *
 import tkMessageBox
 import re
 import os.path
-
+from threading import Thread
+import time
 
 stockList=[]
 
@@ -32,7 +33,7 @@ class Stock(object):
         self.website=website
         self.unit=unit
         self.price=self.setPrice()
-        self.totalValue=self.getTotalValue()
+        self.totalValue=self.setTotalValue()
     
     def __repr__(self):
         return """
@@ -72,9 +73,11 @@ class Stock(object):
         start_index=htmlFileReader.find(MagicWord)+len(MagicWord)
         return htmlFileReader[start_index:start_index+5]
         '''
-    
         
     def getTotalValue(self):
+        return self.totalValue
+    
+    def setTotalValue(self):
         return float(self.price)*float(self.unit)
 
         
@@ -90,22 +93,38 @@ def CSV_Dic_Making(): #old function that I wouldn't dare to delete just yet
 '''
 # database -> [Stock, Stock, Stock] where Stock is a class object.        
 # Open the db, from it input (Stock name, webpage to track stock value, total unit that you bought) to set up the 'Stock' class.
-def Dic_making():
+def stockList_making():
+    
+    def dic_making(title,website,unit):
+        stockList.append(Stock(title,website,unit))
+    
     user=str(raw_input("who's profile are we analysing today?"))
+    start = time.clock()
     if os.path.isfile(user+'.db'):
         Database=user+'.db'
     else:
         print('User not found, redirect to dummy data')
         Database='Dummy.db'
-    
     with sqlite3.connect(Database) as connection:
         c = connection.cursor()
         c.execute("""SELECT name, unit FROM stock""")
         rows = c.fetchall()
+        threadList=[]
         for row in rows:
-            stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
+            threadList.append(Thread(target=dic_making, args=(row[0],'null',row[1])))
+            # create a threadList containing all the threads
+            #stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
+        # Setting up threads to let them work simultaneous
+        for thread in threadList:
+            thread.start()
+        # Taking back threads to join them to the main thread    
+        for thread in threadList:
+            thread.join()
             
-Dic_making()
+    print str(time.clock()-start)        
+    return threadList
+         
+stockList_making()
 
            
 ######2ND PART, PARSING THE DICTIONARY WE CREATED IN PART 1##########
@@ -254,6 +273,5 @@ def GUI():
 
     
     window.mainloop()
-
 
 GUI()
