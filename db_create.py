@@ -13,7 +13,7 @@ with sqlite3.connect('Dummy.db') as connection:
 
 	# create the table
 	c.execute("""CREATE TABLE Stock
-		(name TEXT NOT NULL, unit INTEGER NOT NULL, type TEXT, sector TEXT, last_value INTEGER )""")
+		(name TEXT NOT NULL, unit INTEGER NOT NULL, sector TEXT, last_value INTEGER )""")
 
 	# insert dummy data into the table
 	c.executemany(

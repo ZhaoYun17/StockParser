@@ -28,10 +28,11 @@ stockList=[]
 class Stock(object):
     # input a tuple containing (Stock name, webpage to track stock value, total unit that you bought)
     # return a dictionary object with functions like getTotalValue, which returns the total value of that stock you have (unit * value per share)
-    def __init__(self,title,website,unit):
+    def __init__(self,title,website,unit,sector):
         self.title=title
         self.website=website
         self.unit=unit
+        self.sector=sector
         self.price=self.setPrice()
         self.totalValue=self.setTotalValue()
     
@@ -52,6 +53,9 @@ class Stock(object):
     
     def getUnit(self):
         return self.unit
+    
+    def getSector(self):
+        return self.sector
         
     def getPrice(self):
         return self.price
@@ -95,8 +99,8 @@ def CSV_Dic_Making(): #old function that I wouldn't dare to delete just yet
 # Open the db, from it input (Stock name, webpage to track stock value, total unit that you bought) to set up the 'Stock' class.
 def stockList_making():
     
-    def dic_making(title,website,unit):
-        stockList.append(Stock(title,website,unit))
+    def dic_making(title,website,unit,sector):
+        stockList.append(Stock(title,website,unit,sector))
     
     user=str(raw_input("who's profile are we analysing today?"))
     start = time.clock()
@@ -107,11 +111,11 @@ def stockList_making():
         Database='Dummy.db'
     with sqlite3.connect(Database) as connection:
         c = connection.cursor()
-        c.execute("""SELECT name, unit FROM stock""")
+        c.execute("""SELECT name, unit, sector FROM stock""")
         rows = c.fetchall()
         threadList=[]
         for row in rows:
-            threadList.append(Thread(target=dic_making, args=(row[0],'null',row[1])))
+            threadList.append(Thread(target=dic_making, args=(row[0],'null',row[1],row[2])))
             # create a threadList containing all the threads
             #stockList.append(Stock(row[0],'null',row[1])) #This line prepared the stockList
         # Setting up threads to let them work simultaneous
@@ -133,11 +137,27 @@ total=0 #Total amount in the form of stock.
 labels=[] # List containing all the stock name
 value=[] # List containing a stock's total value, in the same order as labels as we are using it to build a pie chart
 
+#creating a Dic to store all sector and it's number
+sectorDic={}
+
 # Calculating the "total" for the entire profile, and building variable 'labels' and 'value' for pie chart building
 for stock in stockList:
     total+=stock.totalValue #prepare sum
     labels+=[stock.title] #prepare label for pie chart
     value+=[stock.totalValue] #prepare the value of pie chart
+    if stock.getSector() not in sectorDic:
+        sectorDic[stock.getSector()]=stock.getTotalValue()
+    else: 
+        sectorDic[stock.getSector()]+=stock.getTotalValue()
+        
+sectorLabels=[]
+sectorValue=[]
+for sector in sectorDic:
+    sectorLabels+=[sector]
+    sectorValue+=[sectorDic[sector]]
+    
+print sectorLabels
+print sectorValue
 
 #original matplotlib pie-chart function is this:
 #plt.pie(value, labels=labels,
@@ -162,7 +182,8 @@ def GUI():
     Label(numberFrame, text = "Price Per Share", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=2)
     Label(numberFrame, text = "Units", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=3)
     Label(numberFrame, text = "Total", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=4)
-    Label(numberFrame, text = "% in Profile", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=5)
+    Label(numberFrame, text = "Sector", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=5)
+    Label(numberFrame, text = "% in Profile", font=("Helvetica", 12), relief=RIDGE, padx=5,pady=5).grid(row=1,column=6)
     
     # I came up with the ingenious idea to create a currentRow variable and change it to move grid to pack labels in.
     # I am sure others do it too or even have better ways but I am still very proud of myself. hehe.
@@ -175,8 +196,9 @@ def GUI():
         Label(numberFrame, text = stock.getTitle(), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=1)
         Label(numberFrame, text = stock.getPrice(), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=2)
         Label(numberFrame, text = stock.getUnit(), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=3)
-        Label(numberFrame, text = stock.getTotalValue(), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=4)
-        Label(numberFrame, text = "{0:.2f}%".format(stock.getTotalValue()/total*100), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=5)
+        Label(numberFrame, text = int(stock.getTotalValue()), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=4)
+        Label(numberFrame, text = stock.getSector(), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=5)
+        Label(numberFrame, text = "{0:.2f}%".format(stock.getTotalValue()/total*100), font=("Times", 12), padx=5,pady=5).grid(row=currentRow,column=6)
     
     
     # Time to move another row down~
@@ -195,7 +217,15 @@ def GUI():
             autopct='%1.1f%%', shadow=True)
     
     canvas = FigureCanvasTkAgg(f, master=window)
-    canvas.get_tk_widget().grid(row=1,column=0, columnspan = 3)
+    canvas.get_tk_widget().grid(row=1,column=0, columnspan = 2)
+    
+    f1 = Figure(figsize=(5,4), dpi=80)    
+    a1=f1.add_subplot(111)
+    a1.pie(sectorValue, labels=sectorLabels,
+            autopct='%1.1f%%', shadow=True)
+    
+    canvas = FigureCanvasTkAgg(f1, master=window)
+    canvas.get_tk_widget().grid(row=1,column=2, columnspan = 2)
     
     #ADDING A NEW FRAME TO SEPARATE THE PIE CHART WITH NEW STUFF    
     ratioFrame=Frame(window)
